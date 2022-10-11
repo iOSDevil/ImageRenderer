@@ -16,6 +16,14 @@ struct helloWorldView: View {
 	}
 }
 
+struct Photo: Transferable {
+	static var transferRepresentation: some TransferRepresentation {
+		ProxyRepresentation(exporting: \.image)
+	}
+	public var image: Image
+	public var caption: String
+}
+
 struct ContentView: View {
 	@State private var screenshotimage: UIImage?
 	@State private var screenshot: Bool = false
@@ -39,15 +47,33 @@ struct ContentView: View {
 						ScrollView {
 							Section {
 								if screenshotimage != nil {
-									Image(uiImage: screenshotimage!)
-									ShareLink(
+									Image(uiImage: screenshotimage!) // looks great
+									
+									let photo: Photo = Photo(image: Image(uiImage: screenshotimage!), caption: "test")
+
+									ShareLink( // when saving to Photo library it looks very low quality
+										item: photo,
+//										subject: Text("Cool Photo"),
+//										message: Text("Check it out!"),
+										preview: SharePreview(
+											"Share Title",
+											image: photo.image
+										)
+									) {
+										Label("Share Image", systemImage: "square.and.arrow.up")
+											.foregroundColor(.white)
+											.padding()
+											.background(.blue.gradient.shadow(.drop(radius: 1, x: 2, y: 2)), in: RoundedRectangle(cornerRadius: 5))
+									}
+
+									ShareLink( // when saving to Photo library it looks very low quality
 										item: Image(uiImage: screenshotimage!),
 										preview: SharePreview(
 											"Share Title",
 											image: Image(uiImage: screenshotimage!)
 										)
 									) {
-										Label("Share Image", systemImage: "square.and.arrow.up")
+										Label("Share Image 2", systemImage: "square.and.arrow.up")
 											.foregroundColor(.white)
 											.padding()
 											.background(.blue.gradient.shadow(.drop(radius: 1, x: 2, y: 2)), in: RoundedRectangle(cornerRadius: 5))
@@ -75,7 +101,6 @@ struct ContentView: View {
 						Task {
 							let renderer =  ImageRenderer(content:helloWorldView())
 							renderer.scale = UIScreen.main.scale
-								//						renderer.scale = 3.0
 							screenshotimage = renderer.uiImage
 						}
 					})
