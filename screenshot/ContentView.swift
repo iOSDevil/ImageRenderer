@@ -1,7 +1,7 @@
-//
-//  ContentView.swift
-//  screenshot
-//
+	//
+	//  ContentView.swift
+	//  screenshot
+	//
 
 import SwiftUI
 
@@ -16,12 +16,27 @@ struct helloWorldView: View {
 	}
 }
 
-struct Photo: Transferable {
-	static var transferRepresentation: some TransferRepresentation {
-		ProxyRepresentation(exporting: \.image)
+	/// A struct that holds png image data.
+struct PNG {
+	private let data: Data
+	
+	init(_ data: Data) {
+		self.data = data
 	}
-	public var image: Image
-	public var caption: String
+}
+
+	// Transferable conformance, providing a DataRepresentation for ImageData.
+@available(iOS 16.0, *)
+extension PNG: Transferable {
+	
+	static var transferRepresentation: some TransferRepresentation {
+		
+		DataRepresentation<PNG>(contentType: .png) { imageData in
+			imageData.data
+		} importing: { data in
+			PNG(data)
+		}
+	}
 }
 
 struct ContentView: View {
@@ -47,33 +62,19 @@ struct ContentView: View {
 						ScrollView {
 							Section {
 								if screenshotimage != nil {
-									Image(uiImage: screenshotimage!) // looks great
+									Image(uiImage: screenshotimage!)
 									
-									let photo: Photo = Photo(image: Image(uiImage: screenshotimage!), caption: "test")
-
-									ShareLink( // when saving to Photo library it looks very low quality
+									let photo = PNG((screenshotimage?.pngData())!) // create transferable 'image'
+																				   //									let photo: Photo = Photo(image: Image(uiImage: screenshotimage!), caption: "test") // first attempt, results in low quality
+									
+									ShareLink(
 										item: photo,
-//										subject: Text("Cool Photo"),
-//										message: Text("Check it out!"),
 										preview: SharePreview(
 											"Share Title",
-											image: photo.image
+											image: photo
 										)
 									) {
 										Label("Share Image", systemImage: "square.and.arrow.up")
-											.foregroundColor(.white)
-											.padding()
-											.background(.blue.gradient.shadow(.drop(radius: 1, x: 2, y: 2)), in: RoundedRectangle(cornerRadius: 5))
-									}
-
-									ShareLink( // when saving to Photo library it looks very low quality
-										item: Image(uiImage: screenshotimage!),
-										preview: SharePreview(
-											"Share Title",
-											image: Image(uiImage: screenshotimage!)
-										)
-									) {
-										Label("Share Image 2", systemImage: "square.and.arrow.up")
 											.foregroundColor(.white)
 											.padding()
 											.background(.blue.gradient.shadow(.drop(radius: 1, x: 2, y: 2)), in: RoundedRectangle(cornerRadius: 5))
